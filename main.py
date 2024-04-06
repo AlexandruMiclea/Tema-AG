@@ -6,80 +6,90 @@ from module.incrucisare import incrucisare
 from module.mutatie import mutatie
 
 def afisare_cariotip(mesaj):
-    print(mesaj)
+    date.outfile.write(mesaj + '\n')
     for i, x in enumerate(date.lista_cromozomi):
-        #print(decodificare(x, domeniu_de_definitie[0], precizie_discretizare, pas_discretizare))
         valoare_decodificata = decodificare(x)
-        #print(f"{f"{i + 1}: {x}".rjust(26)} x = {valoare_decodificata} f = {functie (valoare_decodificata)}")
-        print(f"{i + 1}: {x}".rjust(26), end = " x = ")
-        # numarul de cifre pe care le poate avea partea intreaga
+        date.outfile.write(f"{i + 1}: {x}".rjust(26) + " x = ")
         numar_caractere = len(str(max(abs(date.domeniu_de_definitie[0]), abs(date.domeniu_de_definitie[1]))))
-        numar_caractere += 2 + date.precizie_discretizare # numar un minus si un punct pe langa partea fractionara
-        print(f"{str(valoare_decodificata)[:(numar_caractere - (1 if valoare_decodificata > 0 else 0))]}".rjust(numar_caractere), end = " f = ")
-        print(date.functie (valoare_decodificata))
-    print()
+        numar_caractere += 2 + date.precizie_discretizare
+        date.outfile.write(f"{str(valoare_decodificata)[:(numar_caractere - (1 if valoare_decodificata > 0 else 0))]}".rjust(numar_caractere) + " f = ")
+        date.outfile.write(str(date.functie (valoare_decodificata)) + '\n')
+    date.outfile.write('\n')
 
+afiseaza = True
 afisare_cariotip("Populatia initiala:")
 
-date.maxim_generational.append(max([date.functie (decodificare(x)) for x in date.lista_cromozomi]))
+date.maxim_generational.append((max([date.functie (decodificare(x)) for x in date.lista_cromozomi]), sum([date.functie (decodificare(x)) for x in date.lista_cromozomi]) / date.dimensiune_populatie))
 
-#print(probabilitati_selectie())
-date.lista_probabilitati, date.interval_probabilitati = probabilitati_selectie()
+while(date.numar_etape):
+    date.numar_etape -= 1
 
-print("Probabilitati selectie")
-for i in range(date.dimensiune_populatie):
-    print(f"cromozom {str(i + 1).rjust(3)} probabilitate {date.lista_probabilitati[i]}")
-print()
+    date.lista_probabilitati, date.interval_probabilitati = probabilitati_selectie()
 
-print("Intervale probabilitati selectie")
-print(*date.interval_probabilitati)
-print()
+    if afiseaza:
+        date.outfile.write("Probabilitati selectie\n")
+        for i in range(date.dimensiune_populatie):
+            date.outfile.write(f"cromozom {str(i + 1).rjust(3)} probabilitate {date.lista_probabilitati[i]}\n")
+        date.outfile.write('\n')
+        date.outfile.write("Intervale probabilitati selectie\n")
+        date.outfile.write("0 ")
+        for elem in date.interval_probabilitati:
+            date.outfile.write(str(elem) + ' ')
+        date.outfile.write('\n\n')
 
-rez = selectie()
+    rez = selectie()
 
-for x in rez:
-    print(f"u = {round(x[1], 18)}".ljust(24), end = ' ')
-    print(f"selectam cromozomul {x[0]}")
+    if afiseaza:
+        for x in rez:
+            date.outfile.write(f"u = {round(x[1], 18)}".ljust(24) + ' ')
+            date.outfile.write(f"selectam cromozomul {x[0]}\n")
 
-date.lista_cromozomi = [date.lista_cromozomi[i - 1] for i in [el[0] for el in rez]]
-print()
+    date.lista_cromozomi = [date.lista_cromozomi[i - 1] for i in [el[0] for el in rez]]
+    if afiseaza:
+        date.outfile.write('\n')
+        afisare_cariotip("Populatia dupa selectie:")
 
-afisare_cariotip("Populatia Dupa selectie:")
+    if afiseaza:
+        date.outfile.write(f"Probabilitatea de incrucisare {date.probabilitate_incrucisare}\n")
+    aux = []
+    for i, x in enumerate(date.lista_cromozomi):
+        valoare_uniforma = random.random()
+        if afiseaza:
+            date.outfile.write(f"{i + 1}: {x}".rjust(26) + " u = ")
+            date.outfile.write(str(valoare_uniforma))
+        if (valoare_uniforma < date.probabilitate_incrucisare):
+            if afiseaza:
+                date.outfile.write(f" < {date.probabilitate_incrucisare} participa")
+            aux.append([i, x])
+        if afiseaza:
+            date.outfile.write('\n')
+    if afiseaza:
+        date.outfile.write('\n')
 
-# incrucisare
+    aux = incrucisare(aux, afiseaza)
+    for x in aux:
+        date.lista_cromozomi[x[0]] = x[1]
 
-print(f"Probabilitatea de incrucisare {date.probabilitate_incrucisare}")
-aux = []
-for i, x in enumerate(date.lista_cromozomi):
-    print(f"{i + 1}: {x}".rjust(26), end = " u = ")
-    valoare_uniforma = random.random()
-    print(valoare_uniforma, end = '')
-    if (valoare_uniforma < date.probabilitate_incrucisare):
-        print(f" < {date.probabilitate_incrucisare} participa", end = '')
-        # adauga cromozom alaturi de index in alta lista ca sa il prelucrezi
-        aux.append([i, x])
-    print()
-print()
+    if afiseaza:
+        afisare_cariotip("Dupa incrucisare:")
 
-aux = incrucisare(aux)
-for x in aux:
-    date.lista_cromozomi[x[0]] = x[1]
+    if afiseaza:
+        date.outfile.write(f"Probabilitatea de mutatie pentru fiecare gena {date.probabilitate_mutatie}\n")
 
-afisare_cariotip("Dupa incrucisare:")
+    elemente_modificate = mutatie()
 
-# mutatie
+    if afiseaza:
+        date.outfile.write("Au fost modificati cromozomii:\n")
+        for elem in elemente_modificate:
+            date.outfile.write(str(elem) + '\n')
+        date.outfile.write('\n')
+        afisare_cariotip("Dupa mutatie:")
 
-print(f"Probabilitatea de mutatie pentru fiecare gena {date.probabilitate_mutatie}")
+    date.maxim_generational.append((max([date.functie (decodificare(x)) for x in date.lista_cromozomi]), sum([date.functie (decodificare(x)) for x in date.lista_cromozomi]) / date.dimensiune_populatie))
+    afiseaza = False
 
-elemente_modificate = mutatie()
-print("Au fost modificati cromozomii:")
-for elem in elemente_modificate:
-    print(elem)
-print()
-
-afisare_cariotip("Dupa mutatie:")
-
-date.maxim_generational.append(max([date.functie(decodificare(x)) for x in date.lista_cromozomi]))
-
-for elem in date.maxim_generational:
-    print(elem)
+date.outfile.write("Evolutia maximului:\n")
+date.outfile.write("Gen      Fitness maxim       Fitness mediu\n")
+for i, elem in enumerate(date.maxim_generational):
+    date.outfile.write(f"{i}: ".ljust(4))
+    date.outfile.write(str(elem[0]).rjust(20).ljust(20) + str(elem[1]).rjust(20).ljust(20) + '\n')

@@ -1,6 +1,8 @@
 import math
 from module.generare import genereaza_cromozomi
 
+outfile = open("output.txt", "w")
+
 # date de intrare
 
 dimensiune_populatie = 20 # 0...
@@ -14,13 +16,8 @@ numar_etape = 50 # 0...
 # date necesare
 
 lungime_cromozom = math.ceil(math.log2((domeniu_de_definitie[1] - domeniu_de_definitie[0])*10**precizie_discretizare))
-#print(lungime_cromozom)
-
 pas_discretizare = (domeniu_de_definitie[1] - domeniu_de_definitie[0]) / 2 ** lungime_cromozom
-#print(pas_discretizare)
-
 lista_cromozomi = genereaza_cromozomi(lungime_cromozom, dimensiune_populatie)
-#print(*lista_cromozomi)
 
 lista_probabilitati = []
 interval_probabilitati = []
